@@ -6,6 +6,9 @@ project(rosfrc)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
+  rosserial_embeddedlinux
+  message_generation
+  message_runtime
 )
 
 ## System dependencies are found with CMake's conventions
@@ -42,11 +45,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+   FILES
+   DriverStationStatus.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -63,10 +65,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -98,22 +100,27 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES rosfrc
-#  CATKIN_DEPENDS std_msgs
-#  DEPENDS system_lib
+CATKIN_DEPENDS message_generation std_msgs
 )
 
 ###########
 ## Build ##
 ###########
+add_custom_command(
+OUTPUT  ${PROJECT_BINARY_DIR}/ros_lib/librosembeddedlinux.a
+DEPENDS ${PROJECT_SOURCE_DIR}/ros_lib
+COMMAND ${CATKIN_ENV} rm -Rf ${PROJECT_BINARY_DIR}/ros_lib ${PROJECT_BINARY_DIR}/examples
+COMMAND ${CATKIN_ENV} rosrun rosserial_embeddedlinux make_libraries.py ${PROJECT_BINARY_DIR}
+COMMAND ${CATKIN_ENV} cp -r  ${PROJECT_SOURCE_DIR}/ros_lib/* ${PROJECT_BINARY_DIR}/ros_lib/
+COMMAND ${CATKIN_ENV} make --directory=${PROJECT_BINARY_DIR}/ros_lib/
+)
+add_custom_target(${PROJECT_NAME}_ros_lib DEPENDS ${PROJECT_BINARY_DIR}/ros_lib/librosembeddedlinux.a ${PROJECT_SOURCE_DIR}/ros_lib)
+add_dependencies(${PROJECT_NAME}_ros_lib ${catkin_EXPORTED_TARGETS})
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+
 
 ## Declare a C++ library
 # add_library(rosfrc
