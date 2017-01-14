@@ -5,6 +5,7 @@
 #include "ros.h"
 #include <sensor_msgs/Joy.h>
 #include <rosfrc/DriverStationStatus.h>
+#include <rosfrc/Encoder.h>
 #include <std_msgs/Float64.h>
 
 #include "DriverStation.h"
@@ -13,6 +14,7 @@
 #include "networktables/NetworkTable.h"
 #include <SpeedController.h>
 #include <Joystick.h>
+#include <Encoder.h>
 
 #include <memory>
 #include <functional>
@@ -60,6 +62,17 @@ namespace rosfrc
 		SpeedController(ros::NodeHandle& nh, const char* topic, frc::SpeedController* controller);
 		SpeedController(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::SpeedController> controller);
 		virtual ~SpeedController();
+	};
+	class EncoderUpdater : public Updater
+	{
+	private:
+		std::shared_ptr<frc::Encoder> m_encoder;
+		ros::Publisher pub;
+		rosfrc::Encoder encoder_msg;
+	public:
+		EncoderUpdater(ros::NodeHandle& nh, const char* topic, frc::Encoder* encoder);
+		EncoderUpdater(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Encoder> encoder);
+		void update() override;
 	};
 }
 

@@ -191,6 +191,8 @@ rosfrc::SpeedController::SpeedController(ros::NodeHandle& nh, const char* topic,
 			controller->Set(data.data);
 		})
 {
+       nh.advertise(feedback_pub);
+       nh.subscribe(goal_sub);
 
 }
 rosfrc::SpeedController::SpeedController(ros::NodeHandle& nh, const char* topic, frc::SpeedController* control):
@@ -206,4 +208,22 @@ void rosfrc::SpeedController::update()
 rosfrc::SpeedController::~SpeedController()
 {
 
+}
+
+rosfrc::EncoderUpdater::EncoderUpdater(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Encoder> encoder) :
+	m_encoder(encoder),
+	pub(topic, &encoder_msg)
+{
+	nh.advertise(pub);
+}
+rosfrc::EncoderUpdater::EncoderUpdater(ros::NodeHandle& nh, const char* topic, frc::Encoder* encoder) :
+	rosfrc::EncoderUpdater(nh, topic, std::shared_ptr<frc::Encoder>(encoder))
+{
+
+}
+void rosfrc::EncoderUpdater::update()
+{
+	encoder_msg.distance = m_encoder->GetDistance();
+	encoder_msg.rate = m_encoder->GetRate();
+	pub.publish(&encoder_msg);
 }
