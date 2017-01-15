@@ -1,9 +1,9 @@
 #include "RosRobot.h"
 
-RosRobot::RosRobot(char* portName)
+RosRobot::RosRobot(char* port) :
+	portName(port)
 {
-	nh.initNode(portName);
-	updaters.push_back(std::unique_ptr<rosfrc::Updater>(new rosfrc::DriverStation(nh, "/ds_update")));
+
 }
 
 RosRobot::~RosRobot() {
@@ -30,6 +30,9 @@ void RosRobot::StartCompetition() {
 
   // loop forever, calling the appropriate mode-dependent function
   lw->SetEnabled(false);
+
+  updaters.push_back(std::unique_ptr<rosfrc::Updater>(new rosfrc::DriverStation(nh, "/ds_update")));
+  nh.initNode(portName);
   while (true) {
     // wait for driver station data so the loop doesn't hog the CPU
     if(!m_ds.WaitForData(.25))
@@ -85,6 +88,7 @@ void RosRobot::StartCompetition() {
       HAL_ObserveUserProgramTest();
       TestPeriodic();
     } else {
+		
       // call TeleopInit() if we are now just entering teleop mode from
       // either a different mode or from power-on
       if (!m_teleopInitialized) {
@@ -103,14 +107,27 @@ void RosRobot::StartCompetition() {
     RobotPeriodic();
   }
 }
+void RosRobot::AddUpdater(rosfrc::Updater* updater)
+{
+	updaters.push_back(std::unique_ptr<rosfrc::Updater>(updater));
+}
 void RosRobot::AddJoystick(const char* name, std::shared_ptr<Joystick> stick)
 {
-	updaters.push_back(std::unique_ptr<rosfrc::Updater>(new rosfrc::Joystick(nh, name, stick)));
+	AddUpdater(new rosfrc::Joystick(nh, name, stick));
 }
 void RosRobot::AddSpeedController(const char* name, std::shared_ptr<frc::SpeedController> controller)
 {
-	updaters.push_back(std::unique_ptr<rosfrc::Updater>(new rosfrc::SpeedController(nh, name, controller)));
+	AddUpdater(new rosfrc::SpeedController(nh, name, controller));
 }
+void RosRobot::AddEncoder(const char* topic, std::shared_ptr<frc::Encoder> encoder)
+{
+	AddUpdater(new rosfrc::EncoderUpdater(nh, topic, encoder));
+}
+void RosRobot::AddAccelerometer(const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer)
+{
+	AddUpdater(new rosfrc::Accelerometer(nh, topic, accelerometer));
+}
+
 rosfrc::Joystick::Joystick(ros::NodeHandle& nh, const char* topic,frc::Joystick* stick) :
 		rosfrc::Joystick(nh, topic, std::shared_ptr<frc::Joystick> (stick))
 {
@@ -186,8 +203,8 @@ void rosfrc::SpeedController::goal_cb(const std_msgs::Float64& data)
 }
 rosfrc::SpeedController::SpeedController(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::SpeedController> control):
 		controller(control),
-		feedback_pub((std::string(topic)+"/feedback").c_str(), &feedback_msg),
-		goal_sub((std::string(topic)+"/feedback").c_str(), [this] (const std_msgs::Float64& data) {
+		feedback_pub((new std::string(topic+std::string("/feedback")))->c_str(), &feedback_msg),
+		goal_sub((new std::string(topic+std::string("/goal")))->c_str(), [this] (const std_msgs::Float64& data) {
 			controller->Set(data.data);
 		})
 {
@@ -226,4 +243,21 @@ void rosfrc::EncoderUpdater::update()
 	encoder_msg.distance = m_encoder->GetDistance();
 	encoder_msg.rate = m_encoder->GetRate();
 	pub.publish(&encoder_msg);
+}
+rosfrc::Accelerometer::Accelerometer(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer) :
+	m_accelerometer(accelerometer),
+	pub(topic, &accel_msg)
+{
+	nh.advertise(pub);
+}
+rosfrc::Accelerometer::Accelerometer(ros::NodeHandle& nh, const char* topic, frc::Accelerometer* accelerometer) :
+	rosfrc::Accelerometer(nh, topic, std::shared_ptr<frc::Accelerometer>(accelerometer))
+{
+	
+}
+void rosfrc::Accelerometer::update()
+{
+	accel_msg.x = m_accelerometer->GetX();
+	accel_msg.y = m_accelerometer->GetY();
+	accel_msg.z = m_accelerometer->GetZ();
 }
