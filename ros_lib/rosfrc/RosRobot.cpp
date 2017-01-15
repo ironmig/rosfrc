@@ -3,7 +3,7 @@
 RosRobot::RosRobot(char* port) :
 	portName(port)
 {
-
+  nh.initNode(portName);
 }
 
 RosRobot::~RosRobot() {
@@ -32,18 +32,20 @@ void RosRobot::StartCompetition() {
   lw->SetEnabled(false);
 
   updaters.push_back(std::unique_ptr<rosfrc::Updater>(new rosfrc::DriverStation(nh, "/ds_update")));
-  nh.initNode(portName);
   while (true) {
+	nh.spinOnce();
+	if (nh.connected())
+	{
+		// Update all the ros updaters (DriverStation, Joysticks, etc)
+		for (size_t i = 0; i < updaters.size(); i++)
+			updaters[i]->update();
+	}
     // wait for driver station data so the loop doesn't hog the CPU
-    if(!m_ds.WaitForData(.25))
+    if(!m_ds.WaitForData(0.1))
     {
         RobotPeriodic();
     	continue;
     }
-	nh.spinOnce();
-	// Update all the ros updaters (DriverStation, Joysticks, etc)
-	for (size_t i = 0; i < updaters.size(); i++)
-		updaters[i]->update();
     // Call the appropriate function depending upon the current robot mode
     if (IsDisabled()) {
       // call DisabledInit() if we are now just entering disabled mode from
@@ -127,6 +129,10 @@ void RosRobot::AddAccelerometer(const char* topic, std::shared_ptr<frc::Accelero
 {
 	AddUpdater(new rosfrc::Accelerometer(nh, topic, accelerometer));
 }
+void RosRobot::AddGyro(const char* topic, std::shared_ptr<frc::Gyro> gyro)
+{
+	AddUpdater(new rosfrc::GyroUpdater(nh, topic, gyro));
+}
 
 rosfrc::Joystick::Joystick(ros::NodeHandle& nh, const char* topic,frc::Joystick* stick) :
 		rosfrc::Joystick(nh, topic, std::shared_ptr<frc::Joystick> (stick))
@@ -156,7 +162,7 @@ void rosfrc::Joystick::update()
 	for (size_t i = 0; i < joy_msg.axes_length; i++)
 		joy_msg.axes[i] = joystick->GetRawAxis(i);
 	for (size_t i = 1; i <= joy_msg.buttons_length; i++)
-		joy_msg.buttons[i] = joystick->GetRawButton(i);
+		joy_msg.buttons[i-1] = joystick->GetRawButton(i);
 
 	pub.publish(&joy_msg);
 }
@@ -277,4 +283,5 @@ void rosfrc::GyroUpdater::update()
 {
 	gyro_msg.angle = m_gyro->GetAngle();
 	gyro_msg.rate = m_gyro->GetRate();
+	pub.publish(&gyro_msg);
 }

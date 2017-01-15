@@ -123,6 +123,7 @@ public:
 	void AddSpeedController(const char* name, std::shared_ptr<frc::SpeedController>);
 	void AddEncoder(const char* topic, std::shared_ptr<frc::Encoder> encoder);
 	void AddAccelerometer(const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer);
+	void AddGyro(const char* topic, std::shared_ptr<frc::Gyro> gyro);
 	void AddUpdater(rosfrc::Updater* updater);
 	virtual ~RosRobot();
 };
