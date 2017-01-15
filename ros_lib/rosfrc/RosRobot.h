@@ -7,6 +7,7 @@
 #include <sensor_msgs/Joy.h>
 #include <rosfrc/DriverStationStatus.h>
 #include <rosfrc/Encoder.h>
+#include <rosfrc/Gyro.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3.h>
 
@@ -20,6 +21,7 @@
 #include <Joystick.h>
 #include <Encoder.h>
 #include <interfaces/Accelerometer.h>
+#include <interfaces/Gyro.h>
 
 // stdlib stuff
 #include <memory>
@@ -90,6 +92,16 @@ namespace rosfrc
 	public:
 		Accelerometer(ros::NodeHandle& nh, const char* topic, frc::Accelerometer* accelerometer);
 		Accelerometer(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer);
+		void update() override;
+	};
+	class GyroUpdater : public Updater
+	{
+		std::shared_ptr<frc::Gyro> m_gyro;
+		ros::Publisher pub;
+		rosfrc::Gyro gyro_msg;
+	public:
+		GyroUpdater(ros::NodeHandle& nh, const char* topic, frc::Gyro* gyro);
+		GyroUpdater(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Gyro> gyro);
 		void update() override;
 	};
 }

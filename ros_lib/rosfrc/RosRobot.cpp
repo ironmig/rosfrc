@@ -253,11 +253,28 @@ rosfrc::Accelerometer::Accelerometer(ros::NodeHandle& nh, const char* topic, std
 rosfrc::Accelerometer::Accelerometer(ros::NodeHandle& nh, const char* topic, frc::Accelerometer* accelerometer) :
 	rosfrc::Accelerometer(nh, topic, std::shared_ptr<frc::Accelerometer>(accelerometer))
 {
-	
+
 }
 void rosfrc::Accelerometer::update()
 {
 	accel_msg.x = m_accelerometer->GetX();
 	accel_msg.y = m_accelerometer->GetY();
 	accel_msg.z = m_accelerometer->GetZ();
+}
+
+rosfrc::GyroUpdater::GyroUpdater(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Gyro> gyro) :
+	m_gyro(gyro),
+	pub(topic, &gyro_msg)
+{
+	nh.advertise(pub);
+}
+rosfrc::GyroUpdater::GyroUpdater(ros::NodeHandle& nh, const char* topic, frc::Gyro* gyro) :
+	GyroUpdater(nh, topic, std::shared_ptr<frc::Gyro>(gyro))
+{
+
+}
+void rosfrc::GyroUpdater::update()
+{
+	gyro_msg.angle = m_gyro->GetAngle();
+	gyro_msg.rate = m_gyro->GetRate();
 }

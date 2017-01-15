@@ -50,6 +50,7 @@ add_message_files(
    FILES
    DriverStationStatus.msg
    Encoder.msg
+   Gyro.msg
 )
 
 ## Generate services in the 'srv' folder
