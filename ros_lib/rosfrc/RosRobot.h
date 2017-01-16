@@ -106,7 +106,7 @@ namespace rosfrc
 	};
 }
 
-class RosRobot : frc::IterativeRobot {
+class RosRobot : public frc::IterativeRobot {
 private:
 	ros::NodeHandle  nh;
 	char* portName;

@@ -180,10 +180,10 @@ rosfrc::DriverStation::DriverStation(ros::NodeHandle& nh, const char* topic) :
 void rosfrc::DriverStation::update()
 {
 	//set msg status
-	if (ds.IsAutonomous()) status_msg.status = "AUTO";
-	else if (ds.IsOperatorControl()) status_msg.status = "OPERATORCONTROL";
+	if (ds.IsDisabled()) status_msg.status = "DISABLED";
+	else if (ds.IsAutonomous()) status_msg.status = "AUTO";
 	else if (ds.IsTest()) status_msg.status = "TEST";
-	else status_msg.status = "DISABLED";
+	else status_msg.status = "OPERATORONTROL";
 
 	//set alliance
 	frc::DriverStation::Alliance alliance = ds.GetAlliance();
@@ -266,6 +266,7 @@ void rosfrc::Accelerometer::update()
 	accel_msg.x = m_accelerometer->GetX();
 	accel_msg.y = m_accelerometer->GetY();
 	accel_msg.z = m_accelerometer->GetZ();
+	pub.publish(&accel_msg);
 }
 
 rosfrc::GyroUpdater::GyroUpdater(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Gyro> gyro) :
