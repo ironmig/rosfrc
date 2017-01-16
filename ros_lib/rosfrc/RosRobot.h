@@ -10,6 +10,7 @@
 #include <rosfrc/Gyro.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3.h>
+#include <std_srvs/Trigger.h>
 
 // FRC stuff
 #include <DriverStation.h>
@@ -77,6 +78,7 @@ namespace rosfrc
 	private:
 		std::shared_ptr<frc::Encoder> m_encoder;
 		ros::Publisher pub;
+		ros::ServiceServer<std_srvs::Trigger::Request, std_srvs::Trigger::Response> reset_server;
 		rosfrc::Encoder encoder_msg;
 	public:
 		EncoderUpdater(ros::NodeHandle& nh, const char* topic, frc::Encoder* encoder);

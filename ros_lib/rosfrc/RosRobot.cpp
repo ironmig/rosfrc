@@ -39,7 +39,7 @@ void RosRobot::StartCompetition() {
 		// Update all the ros updaters (DriverStation, Joysticks, etc)
 		for (size_t i = 0; i < updaters.size(); i++)
 			updaters[i]->update();
-	}
+	} else nh.initNode(portName);
     // wait for driver station data so the loop doesn't hog the CPU
     if(!m_ds.WaitForData(0.1))
     {
@@ -235,9 +235,14 @@ rosfrc::SpeedController::~SpeedController()
 
 rosfrc::EncoderUpdater::EncoderUpdater(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Encoder> encoder) :
 	m_encoder(encoder),
-	pub(topic, &encoder_msg)
+	pub(topic, &encoder_msg),
+	reset_server((new std::string(topic+std::string("/reset")))->c_str(), [this] (const std_srvs::Trigger::Request req, std_srvs::Trigger::Response res) {
+		m_encoder->Reset();
+		res.success = true;
+	})
 {
 	nh.advertise(pub);
+	nh.advertiseService(reset_server);
 }
 rosfrc::EncoderUpdater::EncoderUpdater(ros::NodeHandle& nh, const char* topic, frc::Encoder* encoder) :
 	rosfrc::EncoderUpdater(nh, topic, std::shared_ptr<frc::Encoder>(encoder))
