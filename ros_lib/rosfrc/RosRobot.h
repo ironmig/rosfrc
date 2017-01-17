@@ -106,27 +106,26 @@ namespace rosfrc
 		GyroUpdater(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Gyro> gyro);
 		void update() override;
 	};
+	class RosRobot : public frc::IterativeRobot {
+	private:
+		ros::NodeHandle  nh;
+		char* portName;
+		std::vector<std::unique_ptr<rosfrc::Updater>> updaters;
+		bool m_disabledInitialized = false;
+		bool m_autonomousInitialized = false;
+		bool m_teleopInitialized = false;
+		bool m_testInitialized = false;
+	public:
+		RosRobot(char* port);
+		void StartCompetition() override;
+		ros::NodeHandle& getNodeHandle();
+		void AddJoystick(const char* name,std::shared_ptr<frc::Joystick> joystick);
+		void AddSpeedController(const char* name, std::shared_ptr<frc::SpeedController>);
+		void AddEncoder(const char* topic, std::shared_ptr<frc::Encoder> encoder);
+		void AddAccelerometer(const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer);
+		void AddGyro(const char* topic, std::shared_ptr<frc::Gyro> gyro);
+		void AddUpdater(rosfrc::Updater* updater);
+		virtual ~RosRobot();
+	};
 }
-
-class RosRobot : public frc::IterativeRobot {
-private:
-	ros::NodeHandle  nh;
-	char* portName;
-	std::vector<std::unique_ptr<rosfrc::Updater>> updaters;
-	bool m_disabledInitialized = false;
-	bool m_autonomousInitialized = false;
-	bool m_teleopInitialized = false;
-	bool m_testInitialized = false;
-public:
-	RosRobot(char* port);
-	void StartCompetition() override;
-	ros::NodeHandle& getRosNodeHandle();
-	void AddJoystick(const char* name,std::shared_ptr<frc::Joystick> joystick);
-	void AddSpeedController(const char* name, std::shared_ptr<frc::SpeedController>);
-	void AddEncoder(const char* topic, std::shared_ptr<frc::Encoder> encoder);
-	void AddAccelerometer(const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer);
-	void AddGyro(const char* topic, std::shared_ptr<frc::Gyro> gyro);
-	void AddUpdater(rosfrc::Updater* updater);
-	virtual ~RosRobot();
-};
 #endif /* SRC_ROSROBOT_H_ */

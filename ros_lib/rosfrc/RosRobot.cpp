@@ -1,21 +1,21 @@
 #include "RosRobot.h"
 
-RosRobot::RosRobot(char* port) :
+rosfrc::RosRobot::RosRobot(char* port) :
 	portName(port)
 {
   nh.initNode(portName);
 }
 
-RosRobot::~RosRobot() {
+rosfrc::RosRobot::~RosRobot() {
 
 }
 
-ros::NodeHandle& RosRobot::getRosNodeHandle()
+ros::NodeHandle& rosfrc::RosRobot::getNodeHandle()
 {
 	return nh;
 }
 
-void RosRobot::StartCompetition() {
+void rosfrc::RosRobot::StartCompetition() {
   HAL_Report(HALUsageReporting::kResourceType_Framework,
              HALUsageReporting::kFramework_Iterative);
   LiveWindow* lw = LiveWindow::GetInstance();
@@ -109,27 +109,27 @@ void RosRobot::StartCompetition() {
     RobotPeriodic();
   }
 }
-void RosRobot::AddUpdater(rosfrc::Updater* updater)
+void rosfrc::RosRobot::AddUpdater(rosfrc::Updater* updater)
 {
 	updaters.push_back(std::unique_ptr<rosfrc::Updater>(updater));
 }
-void RosRobot::AddJoystick(const char* name, std::shared_ptr<Joystick> stick)
+void rosfrc::RosRobot::AddJoystick(const char* name, std::shared_ptr<frc::Joystick> stick)
 {
 	AddUpdater(new rosfrc::Joystick(nh, name, stick));
 }
-void RosRobot::AddSpeedController(const char* name, std::shared_ptr<frc::SpeedController> controller)
+void rosfrc::RosRobot::AddSpeedController(const char* name, std::shared_ptr<frc::SpeedController> controller)
 {
 	AddUpdater(new rosfrc::SpeedController(nh, name, controller));
 }
-void RosRobot::AddEncoder(const char* topic, std::shared_ptr<frc::Encoder> encoder)
+void rosfrc::RosRobot::AddEncoder(const char* topic, std::shared_ptr<frc::Encoder> encoder)
 {
 	AddUpdater(new rosfrc::EncoderUpdater(nh, topic, encoder));
 }
-void RosRobot::AddAccelerometer(const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer)
+void rosfrc::RosRobot::AddAccelerometer(const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer)
 {
 	AddUpdater(new rosfrc::Accelerometer(nh, topic, accelerometer));
 }
-void RosRobot::AddGyro(const char* topic, std::shared_ptr<frc::Gyro> gyro)
+void rosfrc::RosRobot::AddGyro(const char* topic, std::shared_ptr<frc::Gyro> gyro)
 {
 	AddUpdater(new rosfrc::GyroUpdater(nh, topic, gyro));
 }
