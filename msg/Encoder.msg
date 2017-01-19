@@ -1,6 +1,3 @@
-# Contains stamp of when measurment was taken and frame id of encoder
-Header header
-
 # Distance (signed) reported from Encoder::GetDistance(), in units used in call to SetDistancePerPulse()
 float64 distance
 

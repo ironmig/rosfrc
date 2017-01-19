@@ -39,7 +39,7 @@ void rosfrc::RosRobot::StartCompetition() {
 		// Update all the ros updaters (DriverStation, Joysticks, etc)
 		for (size_t i = 0; i < updaters.size(); i++)
 			updaters[i]->update();
-	} else nh.initNode(portName);
+	}
     // wait for driver station data so the loop doesn't hog the CPU
     if(!m_ds.WaitForData(0.1))
     {
@@ -132,6 +132,10 @@ void rosfrc::RosRobot::AddAccelerometer(const char* topic, std::shared_ptr<frc::
 void rosfrc::RosRobot::AddGyro(const char* topic, std::shared_ptr<frc::Gyro> gyro)
 {
 	AddUpdater(new rosfrc::GyroUpdater(nh, topic, gyro));
+}
+void rosfrc::RosRobot::AddPIDController(const char* topic, std::shared_ptr<frc::PIDController> controller)
+{
+	AddUpdater(new rosfrc::PIDController(nh, topic, controller));
 }
 
 rosfrc::Joystick::Joystick(ros::NodeHandle& nh, const char* topic,frc::Joystick* stick) :
@@ -290,4 +294,16 @@ void rosfrc::GyroUpdater::update()
 	gyro_msg.angle = m_gyro->GetAngle();
 	gyro_msg.rate = m_gyro->GetRate();
 	pub.publish(&gyro_msg);
+}
+rosfrc::PIDController::PIDController(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::PIDController> controller) :
+	m_controller(controller),
+	setpoint_sub(topic, [this] (const std_msgs::Float64& setpoint) {
+		this->m_controller->SetSetpoint(setpoint.data);
+	})
+{
+	nh.subscribe(setpoint_sub);
+}
+void rosfrc::PIDController::update()
+{
+	
 }

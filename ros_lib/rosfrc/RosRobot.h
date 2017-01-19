@@ -23,6 +23,8 @@
 #include <Encoder.h>
 #include <interfaces/Accelerometer.h>
 #include <interfaces/Gyro.h>
+#include <PIDController.h>
+
 
 // stdlib stuff
 #include <memory>
@@ -106,6 +108,16 @@ namespace rosfrc
 		GyroUpdater(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::Gyro> gyro);
 		void update() override;
 	};
+	class PIDController : public rosfrc::Updater
+	{
+	private:
+		std::shared_ptr<frc::PIDController> m_controller;
+		ros::Subscriber<std_msgs::Float64> setpoint_sub;
+		std_msgs::Float64 setpoint_msg;
+	public:
+		PIDController(ros::NodeHandle& nh, const char* topic, std::shared_ptr<frc::PIDController> controller);
+		void update() override;
+	};
 	class RosRobot : public frc::IterativeRobot {
 	private:
 		ros::NodeHandle  nh;
@@ -124,6 +136,7 @@ namespace rosfrc
 		void AddEncoder(const char* topic, std::shared_ptr<frc::Encoder> encoder);
 		void AddAccelerometer(const char* topic, std::shared_ptr<frc::Accelerometer> accelerometer);
 		void AddGyro(const char* topic, std::shared_ptr<frc::Gyro> gyro);
+		void AddPIDController(const char* topic, std::shared_ptr<frc::PIDController> controller);
 		void AddUpdater(rosfrc::Updater* updater);
 		virtual ~RosRobot();
 	};
