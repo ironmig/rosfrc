@@ -1,13 +1,15 @@
 #include "RosRobot.h"
 
 rosfrc::RosRobot::RosRobot(char* port) :
-	portName(port)
+	portName(port),
+	ros_running(false)
 {
-  nh.initNode(portName);
+	
 }
 
 rosfrc::RosRobot::~RosRobot() {
-
+	ros_running = false;
+	ros_thread.join();
 }
 
 ros::NodeHandle& rosfrc::RosRobot::getNodeHandle()
@@ -32,20 +34,13 @@ void rosfrc::RosRobot::StartCompetition() {
   lw->SetEnabled(false);
 
   updaters.push_back(std::unique_ptr<rosfrc::Updater>(new rosfrc::DriverStation(nh, "/ds_update")));
+  ros_running = true;
+  nh.initNode(portName);
+  ros_thread = std::thread(&RosRobot::Run, this);
   while (true) {
-	nh.spinOnce();
-	if (nh.connected())
-	{
-		// Update all the ros updaters (DriverStation, Joysticks, etc)
-		for (size_t i = 0; i < updaters.size(); i++)
-			updaters[i]->update();
-	}
     // wait for driver station data so the loop doesn't hog the CPU
-    if(!m_ds.WaitForData(0.1))
-    {
-        RobotPeriodic();
-    	continue;
-    }
+    m_ds.WaitForData();
+    std::lock_guard<priority_mutex> lock(ros_mutex);
     // Call the appropriate function depending upon the current robot mode
     if (IsDisabled()) {
       // call DisabledInit() if we are now just entering disabled mode from
@@ -108,6 +103,24 @@ void rosfrc::RosRobot::StartCompetition() {
     }
     RobotPeriodic();
   }
+}
+void rosfrc::RosRobot::Run()
+{
+	while (true)
+	{
+        auto sleep_till_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+        {
+            std::lock_guard<priority_mutex> lock(ros_mutex);
+            nh.spinOnce();
+            if (nh.connected())
+            {
+                // Update all the ros updaters (DriverStation, Joysticks, etc)
+                for (size_t i = 0; i < updaters.size(); i++)
+                    updaters[i]->update();
+            }
+        }
+        std::this_thread::sleep_until(sleep_till_time);
+	}
 }
 void rosfrc::RosRobot::AddUpdater(rosfrc::Updater* updater)
 {

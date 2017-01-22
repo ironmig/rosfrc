@@ -24,11 +24,14 @@
 #include <interfaces/Accelerometer.h>
 #include <interfaces/Gyro.h>
 #include <PIDController.h>
-
+#include "HAL/cpp/priority_mutex.h"
 
 // stdlib stuff
 #include <memory>
 #include <functional>
+#include <thread>
+#include <atomic>
+#include <chrono> 
 
 namespace rosfrc
 {
@@ -127,6 +130,12 @@ namespace rosfrc
 		bool m_autonomousInitialized = false;
 		bool m_teleopInitialized = false;
 		bool m_testInitialized = false;
+		
+		priority_mutex ros_mutex;
+		std::atomic<bool> ros_running;
+		std::thread ros_thread;
+		bool running;
+		void Run();
 	public:
 		RosRobot(char* port);
 		void StartCompetition() override;
